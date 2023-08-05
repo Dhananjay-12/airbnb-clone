@@ -1,10 +1,13 @@
+import { useContext } from "react";
 import { Link } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 
 function Header() {
+  const { user } = useContext(UserContext);
   return (
-    <nav className="">
-      <header className=" flex justify-between shadow-sm shadow-gray-300 py-4 px-2 ">
-        <a href="" className="flex gap-1 items-center">
+    <nav className=" shadow-sm border-b border-gray-200 shadow-gray-200">
+      <header className=" flex justify-between py-4 px-2 ">
+        <Link to="/" className="flex gap-1 items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -20,7 +23,7 @@ function Header() {
             />
           </svg>
           <span className="font-bold text-xl">AirBnB</span>
-        </a>
+        </Link>
         <div className="flex gap-2 border border-gray-400 rounded-full py-2 px-4 shadow-md shadow-gray-300 ">
           <div className="flex items-center ">Anywhere</div>
           <div className=" border-l border-gray-300 "></div>
@@ -59,7 +62,10 @@ function Header() {
               d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
             />
           </svg>
-          <Link to="/login" className="bg-gray-500 text-white rounded-full p-1">
+          <Link
+            to={user ? "account" : "/login"}
+            className="bg-gray-500 text-white rounded-full p-1"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -73,6 +79,7 @@ function Header() {
               />
             </svg>
           </Link>
+          {user && <div>{user.name}</div>}
         </div>
       </header>
     </nav>
