@@ -1,9 +1,11 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const multer = require("multer");
 
 const User = require("./models/User");
 
@@ -11,6 +13,7 @@ require("dotenv").config();
 
 const app = express();
 app.use(express.json());
+app.use("/uploads", express.static(__dirname + "/uploads"));
 app.use(cookieParser());
 
 app.use(
@@ -25,6 +28,51 @@ mongoose.connect(process.env.MONGO_URL);
 
 const PORT = 3000;
 const jwtSecret = "lksjjfoiwf92r0j299r320r";
+
+//////////////////////////IMAGE UPLOAD MULTER///////////////////////////////
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, `${__dirname}/uploads`);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const extension = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + extension);
+  },
+});
+
+const upload = multer({ storage: storage });
+//////////////////////////IMAGE UPLOAD MULTER///////////////////////////////
+
+const uploadMultiple = upload.fields([{ name: "photos" }]);
+
+app.post("/user-apartment", uploadMultiple, function (req, res, next) {
+  const photos = req.files.photos.map((photo) => photo.path);
+  const {
+    title,
+    address,
+    description,
+    wifi,
+    tv,
+    pets,
+    privateEntrance,
+    parking,
+    music,
+  } = req.body;
+  res.json({
+    title,
+    address,
+    description,
+    wifi,
+    tv,
+    pets,
+    photos,
+    privateEntrance,
+    parking,
+    music,
+  });
+});
 
 app.get("/", (req, res) => {
   res.send("hello");
@@ -80,15 +128,17 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/profile", (req, res) => {
+  mongoose.connect(process.env.MONGO_URL);
   const { token } = req.cookies;
   if (token) {
-    jwt.verify(token, jwtSecret, {}, async (err, cookieData) => {
+    jwt.verify(token, jwtSecret, {}, async (err, userData) => {
       if (err) throw err;
-      const { name, email, _id } = await User.findById(cookieData.id);
+      const { name, email, _id } = await User.findById(userData.id);
       res.json({ name, email, _id });
     });
+  } else {
+    res.json(null);
   }
-  // res.json(token);
 });
 
 app.post("/logout", (req, res) => {
