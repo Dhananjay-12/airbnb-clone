@@ -7,15 +7,21 @@
   padding: 0;
   box-sizing: border-box;
   transition: all 0.5s;
+  font-family: "poppins";
 }
 
 input[type="text"],
 input[type="password"],
-input[type="email"] {
+input[type="email"],
+input[type="number"] {
   @apply w-full border m-1 py-2 px-3 rounded-2xl;
 }
 
 button.primary {
   background-color: #f5385d;
   @apply p-1 text-white rounded-2xl w-full my-4;
+}
+
+.heading {
+  @apply font-semibold;
 }
