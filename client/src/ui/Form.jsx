@@ -19,9 +19,15 @@ function Form({ formStyle, type }) {
   async function onSubmit(data) {
     if (type === "register") {
       try {
-        await axios.post("/register", {
-          data,
-        });
+        await axios.post(
+          "/register",
+          {
+            data,
+          },
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
         toast.success("Registration successful. Now you can log in!");
       } catch (err) {
         toast.error("We encountered an error while registering you in");
