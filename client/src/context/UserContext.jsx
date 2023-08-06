@@ -8,13 +8,13 @@ function UserProvider({ children }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    async function fetchUser() {
-      const { data } = await axios.get("/profile");
-      setUser(data);
-      setReady(true);
+    if (!user) {
+      axios.get("/profile").then(({ data }) => {
+        setUser(data);
+        setReady(true);
+      });
     }
-    fetchUser();
-  }, []);
+  }, [user]);
 
   return (
     <UserContext.Provider value={{ user, setUser, ready }}>
