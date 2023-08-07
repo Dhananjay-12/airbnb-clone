@@ -8,12 +8,13 @@ const cookieParser = require("cookie-parser");
 const multer = require("multer");
 
 const User = require("./models/User");
+const PlaceModel = require("./models/place");
 
 require("dotenv").config();
 
 const app = express();
 app.use(express.json());
-app.use("/uploads", express.static(__dirname + "/uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(cookieParser());
 
 app.use(
@@ -33,7 +34,7 @@ const jwtSecret = "lksjjfoiwf92r0j299r320r";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, `${__dirname}/uploads`);
+    cb(null, `uploads`);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -47,7 +48,8 @@ const upload = multer({ storage: storage });
 
 const uploadMultiple = upload.fields([{ name: "photos" }]);
 
-app.post("/user-apartment", uploadMultiple, function (req, res, next) {
+app.post("/user-apartment", uploadMultiple, async function (req, res, next) {
+  const { token } = req.cookies;
   const photos = req.files.photos.map((photo) => photo.path);
   const {
     title,
@@ -59,18 +61,63 @@ app.post("/user-apartment", uploadMultiple, function (req, res, next) {
     privateEntrance,
     parking,
     music,
+    maxGuests,
+    price,
+    extraInfo,
   } = req.body;
-  res.json({
-    title,
-    address,
-    description,
+
+  const recievedPerks = {
     wifi,
     tv,
     pets,
-    photos,
     privateEntrance,
     parking,
     music,
+  };
+
+  const perks = [];
+  //   console.log(Object.values(recievedPerks))
+  for (val in recievedPerks) {
+    if (recievedPerks[val] === "true") {
+      perks.push(val);
+    }
+  }
+
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    const photos = req.files.photos.map((photo) => photo.filename);
+    if (err) throw err;
+    const apartment = await PlaceModel.create({
+      owner: userData.id,
+      title,
+      address,
+      description,
+      perks,
+      maxGuests,
+      price,
+      extraInfo,
+      photos,
+    });
+    res.json({
+      title,
+      address,
+      description,
+      wifi,
+      tv,
+      photos: req.files.photos.filename,
+      pets,
+      privateEntrance,
+      parking,
+      music,
+    });
+  });
+});
+
+app.get("/place", async (req, res) => {
+  const { token } = req.cookies;
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) throw err;
+    const places = await PlaceModel.find({ owner: userData.id });
+    res.json(places);
   });
 });
 
